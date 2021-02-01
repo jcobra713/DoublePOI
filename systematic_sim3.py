@@ -332,13 +332,13 @@ def largeVehicleRegimeTesting():
 		targetUtilities.append(np.mean(getTargetUtilities(nA)))
 		print(nA.iterations)
 	
-	with open('largeVehicleRegimeTesting_1.csv','w') as out: 
+	with open('largeVehicleRegimeTesting_2.csv','w') as out:
 		for i,N in enumerate(Ns):
 			out.write('%d,%d,%f\n'%(N,nOfIterations[i],targetUtilities[i]))
 
 
 def printLargeVehicleRegimeTestingData():
-	with open('largeVehicleRegimeTesting_1.csv','r') as inp:
+	with open('largeVehicleRegimeTesting_2.csv','r') as inp:
 		lines = inp.read().splitlines()
 	Ns = []
 	nOfIterations = []
@@ -380,7 +380,7 @@ def exampleNonConvergence():
 def main():
 	largeVehicleRegimeTesting()
 	printLargeVehicleRegimeTestingData()
-	
+	# originalMain()
 	
 	
 if __name__ == '__main__':
