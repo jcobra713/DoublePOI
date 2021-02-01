@@ -317,28 +317,36 @@ def largeTargetRegimeTesting():
 	
 
 def largeVehicleRegimeTesting():
-	Ns = range(20,100)
+	n = 20
+	nMax = 100
+	Ns = range(n, nMax+1)
 	M = 10
 	
 	nOfIterations = []
 	targetUtilities = []
-	for N in Ns:
-		print('running smart assignment, M=%d, N=%d'%(M,N))
-		vP,tP = getLocalizedPlacement(N,M)
+	while n <= nMax:
+		print('running smart assignment, M=%d, N=%d'%(M,n))
+		vP,tP = getLocalizedPlacement(n,M)
 		dist = distance(vP,tP)#initialize distance object
-		nA = nashAssigner(N=N,M=M,R=5,tau=1,dist=dist) #initialize nash equilibrium algorithm
-		nA.getAssignments()#get target assignments 
+		nA = nashAssigner(N=n,M=M,R=5,tau=1,dist=dist) #initialize nash equilibrium algorithm
+		nA.getAssignments()#get target assignments
+		if (nA.iterations >= 25):
+			print("Repeated")
+			continue
 		nOfIterations.append(nA.iterations)
 		targetUtilities.append(np.mean(getTargetUtilities(nA)))
 		print(nA.iterations)
+		n += 1
+
 	
-	with open('largeVehicleRegimeTesting_2.csv','w') as out:
+	with open('largeVehicleRegimeTesting_4.csv','w') as out:
 		for i,N in enumerate(Ns):
+			print(i, " ", N)
 			out.write('%d,%d,%f\n'%(N,nOfIterations[i],targetUtilities[i]))
 
 
 def printLargeVehicleRegimeTestingData():
-	with open('largeVehicleRegimeTesting_2.csv','r') as inp:
+	with open('largeVehicleRegimeTesting_3.csv','r') as inp:
 		lines = inp.read().splitlines()
 	Ns = []
 	nOfIterations = []
@@ -348,8 +356,9 @@ def printLargeVehicleRegimeTestingData():
 		Ns.append(int(tokens[0]))
 		nOfIterations.append(int(tokens[1]))
 		targetUtilities.append(float(tokens[2]))
-		
-	fig,axs = plt.subplots(2,1,sharex=True) 
+
+	fig,axs = plt.subplots(2,1,sharex=True)
+	axs[0].set_ylim([0, 26])
 	axs[0].plot(Ns,nOfIterations)
 	axs[1].plot(Ns,targetUtilities)
 	axs[1].set_xlabel('number of vehicles')
@@ -378,7 +387,7 @@ def exampleNonConvergence():
 	
 	
 def main():
-	largeVehicleRegimeTesting()
+	# largeVehicleRegimeTesting()
 	printLargeVehicleRegimeTestingData()
 	# originalMain()
 	
