@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import scipy.spatial.distance as spd 
 import scipy.stats as stats
 
-
+np.random.seed(3)
 #define class for distance function 
 class distance: 
 	#class used for arrival time and distance calculations
@@ -76,8 +76,20 @@ class nashAssigner:
 		except StopIteration:
 			reward = self.R 
 		cost = self.dist.cost(vehicle=si,target=t)#calculate cost 
-		return reward - cost 
-	
+		return reward - cost
+
+
+	def getReward(self,si,t): #returns reward given to vehicle si to go to target t (dependent on state of other vehicles)
+		at = self.decisionTime + self.dist.travelTime(vehicle=si,target=t,source=True)#calculate arrival time of si at t
+		#calculate reward according to previous arrival time at t
+		try:
+			pat = next(x[1] for x in self.arrivalTime[t] if x[1] < at) #get the previous arrival time at t
+			reward = self.R*(1-np.e**(-(at-pat)/self.tau))
+		except StopIteration:
+			reward = self.R
+		return reward
+
+
 	
 	def getBestTarget(self,si):
 		u = np.zeros(self.M)#array to store utilities 
@@ -201,10 +213,14 @@ class nashAssigner:
 		its = ats[:-1] - ats[1:] #time intervals 
 		its = its/np.sum(its) #normalize to make probabilities
 		return stats.entropy(its,base=2)#/np.log2(len(its))
-		
-		
-		
-		
+
+	def getTargetReward(self, t):
+		if not self.arrivalTime[t]: return 0
+		targetReward = 0
+		for si, at in self.arrivalTime[t]:
+			targetReward += float(self.getReward(si, t))
+		return targetReward
+
 def getTargetAssignments(nA): 		
 	print('final target allocation: (vehicle,target,utility)')
 	allocations = []
@@ -228,7 +244,11 @@ def getTargetUtilities(nA):
 		targetUtilities.append(nA.getTargetUtility(t))
 	return targetUtilities
 	
-
+def getPlatformReward(nA):
+	targetRewards = []
+	for t in range(nA.M):
+		targetRewards.append(nA.getTargetReward(t))
+	return targetRewards
 
 def getRandomPlacement(N,M):
 	vP = np.random.random((2*N,2))#sources and destinations
@@ -318,12 +338,14 @@ def largeTargetRegimeTesting():
 
 def largeVehicleRegimeTesting():
 	n = 20
-	nMax = 100
+	nMax = 60
 	Ns = range(n, nMax+1)
 	M = 10
 	
 	nOfIterations = []
 	targetUtilities = []
+	platformReward = []
+	platformUtilityperReward = []
 	while n <= nMax:
 		print('running smart assignment, M=%d, N=%d'%(M,n))
 		vP,tP = getLocalizedPlacement(n,M)
@@ -335,27 +357,33 @@ def largeVehicleRegimeTesting():
 			continue
 		nOfIterations.append(nA.iterations)
 		targetUtilities.append(np.mean(getTargetUtilities(nA)))
+		platformReward.append(np.sum(getPlatformReward(nA)))
+		platformUtilityperReward.append(np.mean(getTargetUtilities(nA))/np.sum(getPlatformReward(nA)))
 		print(nA.iterations)
 		n += 1
 
 	
-	with open('largeVehicleRegimeTesting_5.csv','w') as out:
+	with open('largeVehicleRegimeTesting_6.csv','w') as out:
 		for i,N in enumerate(Ns):
-			print(i, " ", N)
-			out.write('%d,%d,%f\n'%(N,nOfIterations[i],targetUtilities[i]))
+			# print(i, " ", N)
+			out.write('%d,%d,%f,%f, %f\n'%(N,nOfIterations[i],targetUtilities[i], platformReward[i], platformUtilityperReward[i]))
 
 
 def printLargeVehicleRegimeTestingData():
-	with open('largeVehicleRegimeTesting_4.csv','r') as inp:
+	with open('largeVehicleRegimeTesting_6.csv','r') as inp:
 		lines = inp.read().splitlines()
 	Ns = []
 	nOfIterations = []
 	targetUtilities = []
+	platformReward = []
+	platformUperR = []
 	for line in lines: 
 		tokens = line.split(',')
 		Ns.append(int(tokens[0]))
 		nOfIterations.append(int(tokens[1]))
 		targetUtilities.append(float(tokens[2]))
+		platformReward.append(float(tokens[3]))
+		platformUperR.append(float(tokens[4]))
 
 	fig,axs = plt.subplots(2,1,sharex=True)
 	axs[0].set_ylim([0, 26])
@@ -365,6 +393,20 @@ def printLargeVehicleRegimeTestingData():
 	axs[0].set_ylabel('number of iterations')
 	axs[1].set_ylabel('average utility')
 	axs[0].set_title('number of targets M=10')
+
+	plt.figure()
+	plt.plot(Ns, platformUperR)
+	plt.axis([np.amin(Ns), np.amax(Ns), np.amin(platformUperR), 0.04])
+	plt.xlabel('number of vehicles')
+	plt.ylabel('Utility per dollar given out')
+	plt.title('Utility per dollar given out as N increases')
+
+	plt.figure()
+	plt.plot(Ns, platformReward)
+	plt.axis([np.amin(Ns), np.amax(Ns), np.amin(platformReward), np.amax(platformReward)])
+	plt.xlabel('number of vehicles')
+	plt.ylabel('Reward')
+	plt.title('Reward as N increases')
 	plt.show()
 
 
