@@ -338,7 +338,7 @@ def largeTargetRegimeTesting():
 
 def largeVehicleRegimeTesting():
 	n = 20
-	nMax = 100
+	nMax = 80
 	Ns = range(n, nMax+1)
 	M = 10
 	
@@ -346,6 +346,8 @@ def largeVehicleRegimeTesting():
 	targetUtilities = []
 	platformReward = []
 	platformUtilityperReward = []
+	maxUtility = []
+	minUtility = []
 	while n <= nMax:
 		print('running smart assignment, M=%d, N=%d'%(M,n))
 		vP,tP = getLocalizedPlacement(n,M)
@@ -359,24 +361,28 @@ def largeVehicleRegimeTesting():
 		targetUtilities.append(np.mean(getTargetUtilities(nA)))
 		platformReward.append(np.sum(getPlatformReward(nA)))
 		platformUtilityperReward.append(np.mean(getTargetUtilities(nA))/np.sum(getPlatformReward(nA)))
+		maxUtility.append(np.amax(getTargetUtilities(nA)))
+		minUtility.append(np.amin(getTargetUtilities(nA)))
 		print(nA.iterations)
 		n += 1
 
 	
-	with open('largeVehicleRegimeTesting_7.csv','w') as out:
+	with open('largeVehicleRegimeTesting_8.csv','w') as out:
 		for i,N in enumerate(Ns):
 			# print(i, " ", N)
-			out.write('%d,%d,%f,%f, %f\n'%(N,nOfIterations[i],targetUtilities[i], platformReward[i], platformUtilityperReward[i]))
+			out.write('%d,%d,%f,%f,%f,%f,%f\n'%(N,nOfIterations[i],targetUtilities[i], platformReward[i], platformUtilityperReward[i], maxUtility[i], minUtility[i]))
 
 
 def printLargeVehicleRegimeTestingData():
-	with open('largeVehicleRegimeTesting_6.csv','r') as inp:
+	with open('largeVehicleRegimeTesting_8.csv','r') as inp:
 		lines = inp.read().splitlines()
 	Ns = []
 	nOfIterations = []
 	targetUtilities = []
 	platformReward = []
 	platformUperR = []
+	maxUtility = []
+	minUtility = []
 	for line in lines: 
 		tokens = line.split(',')
 		Ns.append(int(tokens[0]))
@@ -384,6 +390,8 @@ def printLargeVehicleRegimeTestingData():
 		targetUtilities.append(float(tokens[2]))
 		platformReward.append(float(tokens[3]))
 		platformUperR.append(float(tokens[4]))
+		maxUtility.append(float(tokens[5]))
+		minUtility.append(float(tokens[6]))
 
 	fig,axs = plt.subplots(2,1,sharex=True)
 	axs[0].set_ylim([0, 26])
@@ -403,10 +411,18 @@ def printLargeVehicleRegimeTestingData():
 
 	plt.figure()
 	plt.plot(Ns, platformReward)
-	plt.axis([np.amin(Ns), np.amax(Ns), np.amin(platformReward), np.amax(platformReward)])
+	plt.axis([np.amin(Ns), np.amax(Ns), np.amin(platformReward), np.amax(platformReward)+0.2])
 	plt.xlabel('number of vehicles')
 	plt.ylabel('Reward')
 	plt.title('Reward as N increases')
+
+	plt.figure()
+	plt.plot(Ns, maxUtility)
+	plt.plot(Ns, minUtility)
+	plt.axis([np.amin(Ns), np.amax(Ns), np.amin(minUtility)-0.1, np.amax(maxUtility)+0.2])
+	plt.xlabel('number of vehicles')
+	plt.ylabel('Target Utility')
+	plt.title('Max and Min Utility of targets as N increases')
 	plt.show()
 
 
