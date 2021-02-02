@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import scipy.spatial.distance as spd 
 import scipy.stats as stats
 
-np.random.seed(3)
+# np.random.seed(3)
 #define class for distance function 
 class distance: 
 	#class used for arrival time and distance calculations
@@ -338,7 +338,7 @@ def largeTargetRegimeTesting():
 
 def largeVehicleRegimeTesting():
 	n = 20
-	nMax = 60
+	nMax = 100
 	Ns = range(n, nMax+1)
 	M = 10
 	
@@ -363,7 +363,7 @@ def largeVehicleRegimeTesting():
 		n += 1
 
 	
-	with open('largeVehicleRegimeTesting_6.csv','w') as out:
+	with open('largeVehicleRegimeTesting_7.csv','w') as out:
 		for i,N in enumerate(Ns):
 			# print(i, " ", N)
 			out.write('%d,%d,%f,%f, %f\n'%(N,nOfIterations[i],targetUtilities[i], platformReward[i], platformUtilityperReward[i]))
