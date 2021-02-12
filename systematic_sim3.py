@@ -250,6 +250,12 @@ def getPlatformReward(nA):
 		targetRewards.append(nA.getTargetReward(t))
 	return targetRewards
 
+def getVUtilityPerDollar(nA):
+	vehicleUpR = [] # Utility per Reward
+	for t in range(nA.N):
+		vehicleUpR.append(nA.getUtility(t, nA.targets[t]) / nA.getReward(t, nA.targets[t])) # Vehicle Utility per Dollar given out
+	return vehicleUpR
+
 def getRandomPlacement(N,M):
 	vP = np.random.random((2*N,2))#sources and destinations
 	tP = np.random.random((M,2))# targets 
@@ -338,7 +344,7 @@ def largeTargetRegimeTesting():
 
 def largeVehicleRegimeTesting():
 	n = 20
-	nMax = 80
+	nMax = 30
 	Ns = range(n, nMax+1)
 	M = 10
 	
@@ -346,6 +352,7 @@ def largeVehicleRegimeTesting():
 	targetUtilities = []
 	platformReward = []
 	platformUtilityperReward = []
+	averageVehicleUtilityperReward = []
 	maxUtility = []
 	minUtility = []
 	while n <= nMax:
@@ -361,26 +368,28 @@ def largeVehicleRegimeTesting():
 		targetUtilities.append(np.mean(getTargetUtilities(nA)))
 		platformReward.append(np.sum(getPlatformReward(nA)))
 		platformUtilityperReward.append(np.mean(getTargetUtilities(nA))/np.sum(getPlatformReward(nA)))
+		averageVehicleUtilityperReward.append(np.mean(getVUtilityPerDollar(nA)))
 		maxUtility.append(np.amax(getTargetUtilities(nA)))
 		minUtility.append(np.amin(getTargetUtilities(nA)))
 		print(nA.iterations)
 		n += 1
 
 	
-	with open('largeVehicleRegimeTesting_8.csv','w') as out:
+	with open('largeVehicleRegimeTesting_9.csv','w') as out:
 		for i,N in enumerate(Ns):
 			# print(i, " ", N)
-			out.write('%d,%d,%f,%f,%f,%f,%f\n'%(N,nOfIterations[i],targetUtilities[i], platformReward[i], platformUtilityperReward[i], maxUtility[i], minUtility[i]))
+			out.write('%d,%d,%f,%f,%f,%f,%f,%f\n'%(N,nOfIterations[i],targetUtilities[i],platformReward[i], platformUtilityperReward[i],averageVehicleUtilityperReward[i], maxUtility[i], minUtility[i]))
 
 
 def printLargeVehicleRegimeTestingData():
-	with open('largeVehicleRegimeTesting_8.csv','r') as inp:
+	with open('largeVehicleRegimeTesting_9.csv','r') as inp:
 		lines = inp.read().splitlines()
 	Ns = []
 	nOfIterations = []
 	targetUtilities = []
 	platformReward = []
 	platformUperR = []
+	vUtilityperReward = []
 	maxUtility = []
 	minUtility = []
 	for line in lines: 
@@ -390,8 +399,10 @@ def printLargeVehicleRegimeTestingData():
 		targetUtilities.append(float(tokens[2]))
 		platformReward.append(float(tokens[3]))
 		platformUperR.append(float(tokens[4]))
-		maxUtility.append(float(tokens[5]))
-		minUtility.append(float(tokens[6]))
+		vUtilityperReward.append(float(tokens[5]))
+		maxUtility.append(float(tokens[6]))
+		minUtility.append(float(tokens[7]))
+
 
 	fig,axs = plt.subplots(2,1,sharex=True)
 	axs[0].set_ylim([0, 26])
@@ -403,18 +414,22 @@ def printLargeVehicleRegimeTestingData():
 	axs[0].set_title('number of targets M=10')
 
 	plt.figure()
-	plt.plot(Ns, platformUperR)
-	plt.axis([np.amin(Ns), np.amax(Ns), np.amin(platformUperR), 0.04])
-	plt.xlabel('number of vehicles')
-	plt.ylabel('Utility per dollar given out')
-	plt.title('Utility per dollar given out as N increases')
-
-	plt.figure()
 	plt.plot(Ns, platformReward)
 	plt.axis([np.amin(Ns), np.amax(Ns), np.amin(platformReward), np.amax(platformReward)+0.2])
-	plt.xlabel('number of vehicles')
-	plt.ylabel('Reward')
-	plt.title('Reward as N increases')
+	plt.xlabel('Number of vehicles')
+	plt.ylabel('Total Dollars Given')
+	plt.title('Platform Reward given out as N increases')
+
+	fig2,axs2 = plt.subplots(2, 1, sharex=True)
+	axs2[0].plot(Ns, platformUperR)
+	axs2[1].plot(Ns, vUtilityperReward)
+	axs2[0].axis([np.amin(Ns), np.amax(Ns), np.amin(platformUperR), np.amax(platformUperR)+0.02])
+	axs2[1].axis([np.amin(Ns), np.amax(Ns), np.amin(vUtilityperReward), np.amax(vUtilityperReward)])
+	axs2[0].xlabel('number of vehicles')
+	axs2[0].ylabel('Platform Utility per Dollar')
+	axs2[1].xlabel('number of vehicles')
+	axs2[1].ylabel('Average Vehicle Utility per Dollar')
+	axs2[0].title('Reward as N increases')
 
 	plt.figure()
 	plt.plot(Ns, maxUtility)
@@ -445,7 +460,7 @@ def exampleNonConvergence():
 	
 	
 def main():
-	# largeVehicleRegimeTesting()
+	largeVehicleRegimeTesting()
 	printLargeVehicleRegimeTestingData()
 	# originalMain()
 	
