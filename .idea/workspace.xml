@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="ee873316-7b8f-444d-a66c-4eb46e9b1abf" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1nZjjXSID4RObmEnSrrn15mh7OF" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RunManager" selected="Python.systematic_sim3">
+    <configuration name="systematic_sim3" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="DoublePOI" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/systematic_sim3.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="systematic_sim_double" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="DoublePOI" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/systematic_sim_double.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.systematic_sim3" />
+        <item itemvalue="Python.systematic_sim_double" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ee873316-7b8f-444d-a66c-4eb46e9b1abf" name="Default Changelist" comment="" />
+      <created>1611604642447</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1611604642447</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="390" y="141" key="FileChooserDialogImpl" timestamp="1611665337033">
+      <screen x="0" y="0" width="1216" height="771" />
+    </state>
+    <state x="390" y="141" key="FileChooserDialogImpl/0.0.1216.771@0.0.1216.771" timestamp="1611665337033" />
+    <state width="1899" height="125" key="GridCell.Tab.0.bottom" timestamp="1613104146741">
+      <screen x="2736" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="125" key="GridCell.Tab.0.bottom/0.0.1216.771/2736.0.1920.1040@2736.0.1920.1040" timestamp="1613104146741" />
+    <state width="1195" height="139" key="GridCell.Tab.0.bottom/0.0.1216.771@0.0.1216.771" timestamp="1611691971249" />
+    <state width="1899" height="125" key="GridCell.Tab.0.center" timestamp="1613104146741">
+      <screen x="2736" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="125" key="GridCell.Tab.0.center/0.0.1216.771/2736.0.1920.1040@2736.0.1920.1040" timestamp="1613104146741" />
+    <state width="1195" height="139" key="GridCell.Tab.0.center/0.0.1216.771@0.0.1216.771" timestamp="1611691971249" />
+    <state width="1899" height="125" key="GridCell.Tab.0.left" timestamp="1613104146741">
+      <screen x="2736" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="125" key="GridCell.Tab.0.left/0.0.1216.771/2736.0.1920.1040@2736.0.1920.1040" timestamp="1613104146741" />
+    <state width="1195" height="139" key="GridCell.Tab.0.left/0.0.1216.771@0.0.1216.771" timestamp="1611691971248" />
+    <state width="1899" height="125" key="GridCell.Tab.0.right" timestamp="1613104146741">
+      <screen x="2736" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="125" key="GridCell.Tab.0.right/0.0.1216.771/2736.0.1920.1040@2736.0.1920.1040" timestamp="1613104146741" />
+    <state width="1195" height="139" key="GridCell.Tab.0.right/0.0.1216.771@0.0.1216.771" timestamp="1611691971249" />
+    <state x="118" y="31" key="SettingsEditor" timestamp="1611604894949">
+      <screen x="0" y="0" width="1216" height="771" />
+    </state>
+    <state x="118" y="31" key="SettingsEditor/0.0.1216.771@0.0.1216.771" timestamp="1611604894949" />
+    <state x="3247" y="361" width="1683" height="1027" key="dock-window-1" timestamp="1612240438867">
+      <screen x="2736" y="0" width="1920" height="1040" />
+    </state>
+    <state x="3247" y="361" width="1683" height="1027" key="dock-window-1/0.0.1216.771/2736.0.1920.1040@2736.0.1920.1040" timestamp="1612240438867" />
+    <state x="3359" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1612292293000">
+      <screen x="2736" y="0" width="1920" height="1040" />
+    </state>
+    <state x="3359" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1216.771/2736.0.1920.1040@2736.0.1920.1040" timestamp="1612292293000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
