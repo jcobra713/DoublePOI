@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import scipy.spatial.distance as spd 
 import scipy.stats as stats
 
-# np.random.seed(3)
+np.random.seed(7)
 #define class for distance function 
 class distance: 
 	#class used for arrival time and distance calculations
@@ -253,7 +253,10 @@ def getPlatformReward(nA):
 def getVUtilityPerDollar(nA):
 	vehicleUpR = [] # Utility per Reward
 	for t in range(nA.N):
-		vehicleUpR.append(nA.getUtility(t, nA.targets[t]) / nA.getReward(t, nA.targets[t])) # Vehicle Utility per Dollar given out
+		if nA.targets[t] == nA.targets[t]:
+			vehicleUpR.append(nA.getUtility(t, nA.targets[t]) / nA.getReward(t, nA.targets[t])) # Vehicle Utility per Dollar given out
+		else:
+			vehicleUpR.append(0.0)
 	return vehicleUpR
 
 def getRandomPlacement(N,M):
@@ -344,7 +347,7 @@ def largeTargetRegimeTesting():
 
 def largeVehicleRegimeTesting():
 	n = 20
-	nMax = 30
+	nMax = 70
 	Ns = range(n, nMax+1)
 	M = 10
 	
@@ -375,10 +378,10 @@ def largeVehicleRegimeTesting():
 		n += 1
 
 	
-	with open('largeVehicleRegimeTesting_9.csv','w') as out:
+	with open('largeVehicleRegimeTesting_10.csv','w') as out:
 		for i,N in enumerate(Ns):
 			# print(i, " ", N)
-			out.write('%d,%d,%f,%f,%f,%f,%f,%f\n'%(N,nOfIterations[i],targetUtilities[i],platformReward[i], platformUtilityperReward[i],averageVehicleUtilityperReward[i], maxUtility[i], minUtility[i]))
+			out.write('%d,%d,%f,%f,%f,%f,%f,%f\n'%(N,nOfIterations[i],targetUtilities[i],platformReward[i], platformUtilityperReward[i], maxUtility[i], minUtility[i],averageVehicleUtilityperReward[i]))
 
 
 def printLargeVehicleRegimeTestingData():
@@ -399,9 +402,9 @@ def printLargeVehicleRegimeTestingData():
 		targetUtilities.append(float(tokens[2]))
 		platformReward.append(float(tokens[3]))
 		platformUperR.append(float(tokens[4]))
-		vUtilityperReward.append(float(tokens[5]))
-		maxUtility.append(float(tokens[6]))
-		minUtility.append(float(tokens[7]))
+		maxUtility.append(float(tokens[5]))
+		minUtility.append(float(tokens[6]))
+		vUtilityperReward.append(float(tokens[7]))
 
 
 	fig,axs = plt.subplots(2,1,sharex=True)
@@ -423,13 +426,20 @@ def printLargeVehicleRegimeTestingData():
 	fig2,axs2 = plt.subplots(2, 1, sharex=True)
 	axs2[0].plot(Ns, platformUperR)
 	axs2[1].plot(Ns, vUtilityperReward)
-	axs2[0].axis([np.amin(Ns), np.amax(Ns), np.amin(platformUperR), np.amax(platformUperR)+0.02])
+	axs2[0].axis([np.amin(Ns), np.amax(Ns), np.amin(platformUperR), 0.04])
 	axs2[1].axis([np.amin(Ns), np.amax(Ns), np.amin(vUtilityperReward), np.amax(vUtilityperReward)])
-	axs2[0].xlabel('number of vehicles')
-	axs2[0].ylabel('Platform Utility per Dollar')
-	axs2[1].xlabel('number of vehicles')
-	axs2[1].ylabel('Average Vehicle Utility per Dollar')
-	axs2[0].title('Reward as N increases')
+	axs2[0].set_xlabel('number of vehicles')
+	axs2[0].set_ylabel('Platform Utility per Dollar')
+	axs2[1].set_xlabel('number of vehicles')
+	axs2[1].set_ylabel('Average Vehicle Utility per Dollar')
+	axs2[0].set_title('Reward as N increases')
+
+	# plt.figure()
+	# plt.plot(Ns, platformUperR)
+	# plt.axis([np.amin(Ns), np.amax(Ns), np.amin(platformUperR), 0.04])
+	# plt.xlabel('number of vehicles')
+	# plt.ylabel('Platform Utility per Dollar')
+	# plt.title('Platform U per R')
 
 	plt.figure()
 	plt.plot(Ns, maxUtility)
@@ -460,7 +470,7 @@ def exampleNonConvergence():
 	
 	
 def main():
-	largeVehicleRegimeTesting()
+	# largeVehicleRegimeTesting()
 	printLargeVehicleRegimeTestingData()
 	# originalMain()
 	
