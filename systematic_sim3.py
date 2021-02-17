@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import scipy.spatial.distance as spd 
 import scipy.stats as stats
 
-np.random.seed(7)
+# np.random.seed(7)
 #define class for distance function 
 class distance: 
 	#class used for arrival time and distance calculations
@@ -250,14 +250,17 @@ def getPlatformReward(nA):
 		targetRewards.append(nA.getTargetReward(t))
 	return targetRewards
 
-def getVUtilityPerDollar(nA):
-	vehicleUpR = [] # Utility per Reward
+def getVUtility(nA):
+	vehicleU = [] # Utility per Reward
+	value = None
 	for t in range(nA.N):
 		if nA.targets[t] == nA.targets[t]:
-			vehicleUpR.append(nA.getUtility(t, nA.targets[t]) / nA.getReward(t, nA.targets[t])) # Vehicle Utility per Dollar given out
+			value = nA.getUtility(t, nA.targets[t])
+			vehicleU.append(value[0]) # Vehicle Utility per Dollar given out
 		else:
-			vehicleUpR.append(0.0)
-	return vehicleUpR
+			print("Vehicle ", t, " target = nan")
+			# vehicleUpR.append(0.0)
+	return vehicleU
 
 def getRandomPlacement(N,M):
 	vP = np.random.random((2*N,2))#sources and destinations
@@ -347,15 +350,15 @@ def largeTargetRegimeTesting():
 
 def largeVehicleRegimeTesting():
 	n = 20
-	nMax = 70
+	nMax = 100
 	Ns = range(n, nMax+1)
 	M = 10
 	
 	nOfIterations = []
 	targetUtilities = []
 	platformReward = []
-	platformUtilityperReward = []
-	averageVehicleUtilityperReward = []
+	platformUtilperReward = []
+	averageVehicleUtility = []
 	maxUtility = []
 	minUtility = []
 	while n <= nMax:
@@ -370,29 +373,29 @@ def largeVehicleRegimeTesting():
 		nOfIterations.append(nA.iterations)
 		targetUtilities.append(np.mean(getTargetUtilities(nA)))
 		platformReward.append(np.sum(getPlatformReward(nA)))
-		platformUtilityperReward.append(np.mean(getTargetUtilities(nA))/np.sum(getPlatformReward(nA)))
-		averageVehicleUtilityperReward.append(np.mean(getVUtilityPerDollar(nA)))
+		platformUtilperReward.append(np.mean(getTargetUtilities(nA))/np.sum(getPlatformReward(nA)))
+		averageVehicleUtility.append(np.mean(getVUtility(nA)))
 		maxUtility.append(np.amax(getTargetUtilities(nA)))
 		minUtility.append(np.amin(getTargetUtilities(nA)))
 		print(nA.iterations)
 		n += 1
 
 	
-	with open('largeVehicleRegimeTesting_10.csv','w') as out:
+	with open('largeVehicleRegimeTesting_12.csv','w') as out:
 		for i,N in enumerate(Ns):
 			# print(i, " ", N)
-			out.write('%d,%d,%f,%f,%f,%f,%f,%f\n'%(N,nOfIterations[i],targetUtilities[i],platformReward[i], platformUtilityperReward[i], maxUtility[i], minUtility[i],averageVehicleUtilityperReward[i]))
+			out.write('%d,%d,%f,%f,%f,%f,%f,%f\n'%(N, nOfIterations[i], targetUtilities[i], platformReward[i], platformUtilperReward[i], maxUtility[i], minUtility[i], averageVehicleUtility[i]))
 
 
 def printLargeVehicleRegimeTestingData():
-	with open('largeVehicleRegimeTesting_9.csv','r') as inp:
+	with open('largeVehicleRegimeTesting_12.csv','r') as inp:
 		lines = inp.read().splitlines()
 	Ns = []
 	nOfIterations = []
 	targetUtilities = []
 	platformReward = []
 	platformUperR = []
-	vUtilityperReward = []
+	vUtility = []
 	maxUtility = []
 	minUtility = []
 	for line in lines: 
@@ -404,7 +407,7 @@ def printLargeVehicleRegimeTestingData():
 		platformUperR.append(float(tokens[4]))
 		maxUtility.append(float(tokens[5]))
 		minUtility.append(float(tokens[6]))
-		vUtilityperReward.append(float(tokens[7]))
+		vUtility.append(float(tokens[7]))
 
 
 	fig,axs = plt.subplots(2,1,sharex=True)
@@ -425,13 +428,13 @@ def printLargeVehicleRegimeTestingData():
 
 	fig2,axs2 = plt.subplots(2, 1, sharex=True)
 	axs2[0].plot(Ns, platformUperR)
-	axs2[1].plot(Ns, vUtilityperReward)
-	axs2[0].axis([np.amin(Ns), np.amax(Ns), np.amin(platformUperR), 0.04])
-	axs2[1].axis([np.amin(Ns), np.amax(Ns), np.amin(vUtilityperReward), np.amax(vUtilityperReward)])
+	axs2[1].plot(Ns, vUtility)
+	axs2[0].axis([np.amin(Ns), np.amax(Ns), 0.0225, 0.04])
+	axs2[1].axis([np.amin(Ns), np.amax(Ns), np.amin(vUtility), np.amax(vUtility)])
 	axs2[0].set_xlabel('number of vehicles')
 	axs2[0].set_ylabel('Platform Utility per Dollar')
 	axs2[1].set_xlabel('number of vehicles')
-	axs2[1].set_ylabel('Average Vehicle Utility per Dollar')
+	axs2[1].set_ylabel('Average Vehicle Utility')
 	axs2[0].set_title('Reward as N increases')
 
 	# plt.figure()
