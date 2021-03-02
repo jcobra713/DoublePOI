@@ -370,6 +370,9 @@ def largeVehicleRegimeTesting():
 		if (nA.iterations >= 25):
 			print("Repeated")
 			continue
+		elif np.sum(getPlatformReward(nA)) < 30:
+			print("Cycle Detected, Iteration Repeated")
+			continue
 		nOfIterations.append(nA.iterations)
 		targetUtilities.append(np.mean(getTargetUtilities(nA)))
 		platformReward.append(np.sum(getPlatformReward(nA)))
@@ -381,14 +384,14 @@ def largeVehicleRegimeTesting():
 		n += 1
 
 	
-	with open('largeVehicleRegimeTesting_12.csv','w') as out:
+	with open('largeVehicleRegimeTesting_14.csv','w') as out:
 		for i,N in enumerate(Ns):
 			# print(i, " ", N)
 			out.write('%d,%d,%f,%f,%f,%f,%f,%f\n'%(N, nOfIterations[i], targetUtilities[i], platformReward[i], platformUtilperReward[i], maxUtility[i], minUtility[i], averageVehicleUtility[i]))
 
 
 def printLargeVehicleRegimeTestingData():
-	with open('largeVehicleRegimeTesting_12.csv','r') as inp:
+	with open('largeVehicleRegimeTesting_13.csv','r') as inp:
 		lines = inp.read().splitlines()
 	Ns = []
 	nOfIterations = []
