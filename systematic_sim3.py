@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import scipy.spatial.distance as spd 
 import scipy.stats as stats
 
-# np.random.seed(7)
+np.random.seed(8)
 #define class for distance function 
 class distance: 
 	#class used for arrival time and distance calculations
@@ -178,9 +178,8 @@ class nashAssigner:
 					edgeCosts.append(self.dist.cost(vehicle=tVehicle,target=tTarget))
 				self.R = max(edgeCosts)-0.01
 				print('adusted reward to %f'%self.R)
-			# print(self.targets)	
-				
-			
+			# print(self.targets)
+
 		self.iterations = iteration
 		#calculate utilities at the Nash equilibrium
 		for s in range(self.N):
@@ -291,8 +290,8 @@ def getLocalizedPlacement(N,M):
 	return (vP,tP)
 
 def originalMain():
-	N = 100
-	M = 20
+	N = 5
+	M = 3
 	vP,tP = getRandomPlacement(N,M)
 	vP,tP = getLocalizedPlacement(N,M)
 	dist = distance(vP,tP)#initialize distance object  
@@ -477,8 +476,8 @@ def exampleNonConvergence():
 	
 def main():
 	# largeVehicleRegimeTesting()
-	printLargeVehicleRegimeTestingData()
-	# originalMain()
+	# printLargeVehicleRegimeTestingData()
+	originalMain()
 	
 	
 if __name__ == '__main__':
