@@ -6,7 +6,7 @@ from itertools import permutations
 import itertools
 import random
 
-np.random.seed(4)
+
 class distance:
     # class used for arrival time and distance calculations
     vP = None
@@ -79,6 +79,9 @@ class nashAssigner:
             self.arrivalTime[index[0]].append((i, at[0]))
             self.targets[i] = index
 
+        tar = str(self.targets)
+        tar = tar.replace('\n', ",")
+        print(tar)
         # sort the arrival times at all targets
         for t in self.arrivalTime:
             self.arrivalTime[t].sort(key=lambda x: x[1], reverse=True)
@@ -112,15 +115,27 @@ class nashAssigner:
         cost = self.dist.cost(vehicle=si, path=path)  # calculate cost
         return reward1 + reward2 - cost
 
-    def getReward(self, si, t):  # returns reward given to vehicle si to go to target t (dependent on state of other vehicles)
-        at = self.decisionTime + self.dist.travelTime(vehicle=si, target=t, source=True)  # calculate arrival time of si at t
+    def getReward(self, si, path):  # returns reward given to vehicle si to go to target t (dependent on state of other vehicles)
+        reward2 = 0
+        at = np.zeros(2)
+        at[0] = self.decisionTime + self.dist.travelTime(src=si, dest=path[0], start=True,
+                                                         finish=False)  # calculate arrival time of si at t
+        at[1] = self.dist.travelTime(src=path[0], dest=path[1], start=False, finish=False) + at[0]
         # calculate reward according to previous arrival time at t
         try:
-            pat = next(x[1] for x in self.arrivalTime[t] if x[1] < at)  # get the previous arrival time at t
-            reward = self.R * (1 - np.e ** (-(at - pat) / self.tau))
+            pat = next(x[1] for x in self.arrivalTime[path[0]] if x[1] < at[0])  # get the previous arrival time at t
+            reward1 = self.R * (1 - np.e ** (-(at[0] - pat) / self.tau))
         except StopIteration:
-            reward = self.R
-        return reward
+            reward1 = self.R
+        # Have to implement to be compatible with the single target situations
+        if path[0] != path[1]:
+            try:
+                pat2 = next(x[1] for x in self.arrivalTime[path[1]] if x[1] < at[1])
+                reward2 = self.R * (1 - np.e ** (-(at[1] - pat2) / self.tau))
+            except StopIteration:
+                reward2 = self.R
+
+        return reward1 + reward2
 
     def getBestTarget(self, si):
         u = np.zeros(len(self.collection))
@@ -190,7 +205,7 @@ class nashAssigner:
         count = self.N
         iteration = 0
         while count:
-            print("Count: ", count, "    Iteration: ", iteration)
+            # print("Count: ", count, "    Iteration: ", iteration)
             count = 0
             iteration = iteration + 1
             if iteration > 25: break
@@ -198,12 +213,16 @@ class nashAssigner:
             S = set(range(self.N))
             startingAssignment = np.copy(self.targets)
             transitionSequence = [startingAssignment]
+            cycleCount = 0
             while S:
-                si = S.pop()  # pick random vehicle
-                # si = list(S)[np.random.randint(len(S))]
-                # S.remove(si)
+                if cycleCount % 130 == 0:
+                    startingAssignment = np.copy(self.targets)
+                    transitionSequence = [startingAssignment]
+                si = random.sample(S, 1)[0]
+                S.remove(si)
                 t1 = self.targets[si]
                 tk = self.getBestTarget(si)  # arg max_l u(si,tl)
+                # print("Vehicle: ", si, "    ", t1, "    ", tk)
                 if t1[0] != tk[0] or t1[1] != tk[1]:
                     count += 1
                     self.pair(si, tk)
@@ -214,30 +233,24 @@ class nashAssigner:
                     if sj[1] != None and sj[1] != sj[0]:
                         S.add(sj[1])
                     transitionSequence.append(np.copy(self.targets))
-                    # print("Length of transitions: ", len(transitionSequence))
-            endingAssignment = np.copy(self.targets)
-            if np.sum(startingAssignment == endingAssignment) == self.N and count > 0:  # detected a cycle
-                print('detected a cycle')
-                # for each transition, find the cost to go to the new location
-                edgeCosts = []
-                for i in range(len(transitionSequence) - 1):
-                    # find the vehicle which is transition
-                    tVehicle = np.where(transitionSequence[i] != transitionSequence[i + 1])
-                    # find the new target
-                    tTarget = transitionSequence[i + 1][tVehicle[0][0]]
-                    edgeCosts.append(self.dist.cost(vehicle=tVehicle[0][0], path=tTarget)) # Check if tTarget is passing as a tuple
-                self.R = max(edgeCosts) - 0.01
-                print('adusted reward to %f' % self.R)
+                    endingAssignment = np.copy(self.targets)
+                    test = startingAssignment == endingAssignment
+                    if np.sum(startingAssignment == endingAssignment) == self.N*2 and count > 0:  # detected a cycle
+                        # print('detected a cycle')
+                        # for each transition, find the cost to go to the new location
+                        edgeCosts = []
+                        for i in range(len(transitionSequence) - 1):
+                            # find the vehicle which is transition
+                            tVehicle = np.where(transitionSequence[i] != transitionSequence[i + 1])
+                            # find the new target
+                            tTarget = transitionSequence[i + 1][tVehicle[0][0]]
+                            edgeCosts.append(self.dist.cost(vehicle=tVehicle[0][0],
+                                                            path=tTarget))  # Check if tTarget is passing as a tuple
+                        self.R = max(edgeCosts) - 0.01
+                        print('adusted reward to %f' % self.R)
+                cycleCount += 1
         # print(self.targets)
         self.iterations = iteration
-
-        if self.targets[0][0] == 2 and self.targets[0][1] == 0 and self.targets[1][0] == 0 and self.targets[1][1] == 1 and self.targets[2][0] == 1 \
-            and self.targets[2][1] == 1 and self.targets[3][0] == 0 and self.targets[3][1] == 2 and self.targets[4][0] == 0 and self.targets[4][1] == 2:
-            print("This is the one")
-            for i in range(0, 5):
-                tk = self.getBestTarget(i)
-                pass
-
         # calculate utilities at the Nash equilibrium
         for s in range(self.N):
             self.utilities[s] = self.getUtility(s, self.targets[s])
@@ -270,12 +283,9 @@ class nashAssigner:
         its = its / np.sum(its)  # normalize to make probabilities
         return stats.entropy(its, base=2)  # /np.log2(len(its))
 
-    def getTargetReward(self, t):
-        if not self.arrivalTime[t]: return 0
-        targetReward = 0
-        for si, at in self.arrivalTime[t]:
-            targetReward += float(self.getReward(si, t))
-        return targetReward
+    def getVehicleReward(self, n):
+        if self.targets[n][0] < 0: return 0
+        return self.getReward(n, self.targets[n])
 
 
 def getTargetAssignments(nA):
@@ -303,22 +313,21 @@ def getTargetUtilities(nA):
 
 
 def getPlatformReward(nA):
-    targetRewards = []
-    for t in range(nA.M):
-        targetRewards.append(nA.getTargetReward(t))
+    targetRewards = 0
+    for n in range(nA.N):
+        targetRewards += (nA.getVehicleReward(n))
     return targetRewards
 
 
 def getVUtility(nA):
     vehicleU = []  # Utility per Reward
-    value = None
+    value = 0
     for t in range(nA.N):
-        if nA.targets[t] == nA.targets[t]:
+        if nA.targets[t][0] == nA.targets[t][0] and nA.targets[t][0] >= 0:
             value = nA.getUtility(t, nA.targets[t])
             vehicleU.append(value[0])  # Vehicle Utility per Dollar given out
         else:
             print("Vehicle ", t, " target = nan")
-        # vehicleUpR.append(0.0)
     return vehicleU
 
 def getLocalizedPlacement(N, M):
@@ -346,35 +355,32 @@ def printVp(vP):
         if count % 2 == 0:
             vehicle += 1
         count += 1
-        print("Vehicle ", vehicle, " position: ", i, "    ", count % 2)
+        # print("Vehicle ", vehicle, " position: ", i, "    ", count % 2)
 
 def printTp(tP):
     count = 0
     for i in tP:
-        print("Target ", count, " position: ", i)
+        # print("Target ", count, " position: ", i)
         count += 1
 
 ##################################
 
-def otherMain():
-    N = 5
-    M = 3
-    vP, tP = getLocalizedPlacement(N, M)
+def otherMain(N, M, vP, tP):
     printVp(vP)
     printTp(tP)
     dist = distance(vP,tP)
     R = 3
     tau = 1
 
+    print("Running standard assignment")
     arrivalTime = {}  # dictionary that maintains sequence of vehicle numbers and their arrival times
     for t in range(M): arrivalTime[t] = []
     decisionTime = 0
     targets = np.zeros((N, 2), dtype='int')
-
-    x = [(0,0), (0,1), (0,2), (1,0), (1,1), (1,2), (2,0), (2,1), (2,2)]
-    collection = [p for p in itertools.product(x, repeat=5)]
+    x = list(range(0, M))
+    x = [p for p in itertools.product(x, repeat=2)]
+    collection = [p for p in itertools.product(x, repeat=N)]
     nash = []
-
     # Check if nash equilibrium with getBestTarget on all vehicles. If tk = t1 then good for all
     # How far they are from greatest nash equilibrium
 
@@ -385,9 +391,6 @@ def otherMain():
     j = 0
     # print(collection[40000])
     for perm in collection:
-        if perm[0][0] == 2 and perm[0][1] == 0 and perm[1][0] == 0 and perm[1][1] == 1 and perm[2][0] == 1 and perm[2][1] == 1 \
-            and perm[3][0] == 0 and perm[3][1] == 2 and perm[4][0] == 0 and perm[4][1] == 2:
-            print("This is the one")
         if j % 1000 == 0:
             print("j = ", j)
         j += 1
@@ -453,12 +456,14 @@ def otherMain():
             its = its / np.sum(its)  # normalize to make probabilities
             targetUtilities.append(stats.entropy(its, base=2))
         nash.append(perm)
-        print(perm)
         permUtilities.append(np.mean(targetUtilities))
+        targetUtilities.clear()
     # print(collection[np.argmax(permUtilities)])
+    k = 0
     for n in nash:
-        print(n)
-    pass
+        print("\n", n, " Platform Utility: ", permUtilities[k])
+        k += 1
+    return nash, permUtilities
 
 
 
@@ -466,35 +471,311 @@ def otherMain():
 
 
 
-def originalMain():
-    N = 5
-    M = 3
-    vP, tP = getLocalizedPlacement(N, M)
-    printVp(vP)
-    printTp(tP)
-    dist = distance(vP, tP)  # initialize distance object
-
+def originalMain(N, M, vP, tP, nA):
+    # printVp(vP)
+    # printTp(tP)
     nOfIterations = []
     targetUtilities = []
 
     # R should be in the upper range of the diversion costs
-    print('running smart assignment')
-    nA = nashAssigner(N=N, M=M, R=3, tau=1, dist=dist)  # initialize nash equilibrium algorithm
+    # print('running smart assignment')
     nA.getAssignments()  # get target assignments
     nOfIterations.append(nA.iterations)
     utility = np.mean(getTargetUtilities(nA))
     target = nA.targets
-    print(target)
+    # print(target)
+    # plt.figure()
+    # plt.plot(vP[:, 0], vP[:, 1], 'ro')
+    # plt.plot(tP[:, 0], tP[:, 1], 'bo')
+    # plt.show()
+    # print(utility)
+
+
+def largeVehicleRegimeTesting():
+    n = 3
+    nMax = 12
+    Ns = range(n, nMax+1)
+    M = 5
+
+    nOfIterations = []
+    targetUtilities = []
+    platformReward = []
+    platformUtilperReward = []
+    averageVehicleUtility = []
+    maxUtility = []
+    minUtility = []
+
+    while n <= nMax:
+        print('running smart assignment, M=%d, N=%d' % (M, n))
+        vP, tP = getLocalizedPlacement(n, M)
+        dist = distance(vP, tP)
+        nA = nashAssigner(N=n, M=M, R=3, tau=1, dist=dist)
+        originalMain(n, M, vP, tP, nA)
+        if nA.R != 3 or nA.iterations >= 26:
+            print("Cycle Detected, Iteration Repeated")
+            continue
+        nOfIterations.append(nA.iterations)
+        targetUtilities.append(np.mean(getTargetUtilities(nA)))
+        platformReward.append(getPlatformReward(nA))
+        platformUtilperReward.append(np.mean(getTargetUtilities(nA)) / getPlatformReward(nA))
+        averageVehicleUtility.append(np.mean(getVUtility(nA)))
+        maxUtility.append(np.amax(getTargetUtilities(nA)))
+        minUtility.append(np.amin(getTargetUtilities(nA)))
+        print(nA.iterations)
+        n += 1
+
+    with open('doubleTestRangeN3-14_M5_Sep29.csv', 'w') as out:
+        for i, N in enumerate(Ns):
+            # print(i, " ", N)
+            out.write('%d,%d,%f,%f,%f,%f,%f,%f\n' % (N, nOfIterations[i], targetUtilities[i], platformReward[i], platformUtilperReward[i], maxUtility[i],
+                                                        minUtility[i], averageVehicleUtility[i]))
+
+
+
+def averageTest():
+    n = 2
+    nStart = n
+    nMax = 9
+    Ns = range(n, nMax+1)
+    M = 4
+
+    loop = 0
+    loopMax = 20
+    cycles = 0
+    cycleIterationMax = 50
+
+    nOfIterations = []
+    targetUtilities = []
+    platformReward = []
+    platformUtilperReward = []
+    averageVehicleUtility = []
+    maxUtility = []
+    minUtility = []
+
+    averages = {}
+    averages['nOfIterations'] = []
+    averages['targetUtilities'] = []
+    averages['platformReward'] = []
+    averages['platformUtilperReward'] = []
+    averages['averageVehicleUtility'] = []
+    averages['maxUtility'] = []
+    averages['minUtility'] = []
+
+    while loop < loopMax:
+        while n <= nMax:
+            print('running smart assignment, M=%d, N=%d' % (M, n))
+            vP, tP = getLocalizedPlacement(n, M)
+            dist = distance(vP, tP)
+            nA = nashAssigner(N=n, M=M, R=3, tau=1, dist=dist)
+            originalMain(n, M, vP, tP, nA)
+            while (nA.R != 3 or nA.iterations >= 26) and cycles <= cycleIterationMax:
+                cycles = cycles + 1
+                print("Cycle Detected, Iteration Repeated")
+                nA = nashAssigner(N=n, M=M, R=3, tau=1, dist=dist)
+                originalMain(n, M, vP, tP, nA)
+
+            if cycles > cycleIterationMax:
+                print("Too many cycles, skipping")
+                cycles = 0
+                continue
+
+            nOfIterations.append(nA.iterations)
+            targetUtilities.append(np.mean(getTargetUtilities(nA)))
+            platformReward.append(getPlatformReward(nA))
+            platformUtilperReward.append(np.mean(getTargetUtilities(nA)) / getPlatformReward(nA))
+            averageVehicleUtility.append(np.mean(getVUtility(nA)))
+            maxUtility.append(np.amax(getTargetUtilities(nA)))
+            minUtility.append(np.amin(getTargetUtilities(nA)))
+            cycles = 0
+            # print(nA.iterations)
+            n += 1
+
+        '''with open('Data5/doubleTestRangeN3-9_M4_Oct5_' + str(loop) + '.csv', 'w') as out:
+            for i, N in enumerate(Ns):
+                # print(i, " ", N)
+                out.write('%d,%d,%f,%f,%f,%f,%f,%f\n' % (
+                N, nOfIterations[i], targetUtilities[i], platformReward[i], platformUtilperReward[i], maxUtility[i],
+                minUtility[i], averageVehicleUtility[i]))'''
+
+
+        n = nStart
+        loop += 1
+        print("Loop: ", loop)
+        averages['nOfIterations'].append(nOfIterations.copy())
+        averages['targetUtilities'].append(targetUtilities.copy())
+        averages['platformReward'].append(platformReward.copy())
+        averages['platformUtilperReward'].append(platformUtilperReward.copy())
+        averages['averageVehicleUtility'].append(averageVehicleUtility.copy())
+        averages['maxUtility'].append(maxUtility.copy())
+        averages['minUtility'].append(minUtility.copy())
+
+        nOfIterations.clear()
+        targetUtilities.clear()
+        platformReward.clear()
+        platformUtilperReward.clear()
+        averageVehicleUtility.clear()
+        maxUtility.clear()
+        minUtility.clear()
+
+    itera = np.array(averages['nOfIterations'][0])
+    tUtil = np.array(averages['targetUtilities'][0])
+    formR = np.array(averages['platformReward'][0])
+    utilPerR = np.array(averages['platformUtilperReward'][0])
+    averageVUtil = np.array(averages['averageVehicleUtility'][0])
+    maxUtil = np.array(averages['maxUtility'][0])
+    minUtil = np.array(averages['minUtility'][0])
+
+    for i in range(1, loopMax):
+        itera += np.array(averages['nOfIterations'][i])
+        tUtil += np.array(averages['targetUtilities'][i])
+        formR += np.array(averages['platformReward'][i])
+        utilPerR += np.array(averages['platformUtilperReward'][i])
+        averageVUtil += np.array(averages['averageVehicleUtility'][i])
+        maxUtil += np.array(averages['maxUtility'][i])
+        minUtil += np.array(averages['minUtility'][i])
+
+    itera = itera / loopMax
+    tUtil = tUtil / loopMax
+    formR = formR / loopMax
+    utilPerR = utilPerR / loopMax
+    averageVUtil = averageVUtil / loopMax
+    maxUtil = maxUtil / loopMax
+    minUtil = minUtil / loopMax
+
+    '''with open('Data4/doubleTestRangeAveraged.csv', 'w') as out:
+        for i, N in enumerate(Ns):
+            # print(i, " ", N)
+            out.write('%d,%d,%f,%f,%f,%f,%f,%f\n' % (
+                N, itera[i], tUtil[i], formR[i], utilPerR[i], maxUtil[i],
+                minUtil[i], averageVUtil[i]))'''
+
+
+
+
+
+
+
+
+def nashTester():
+    N = 15
+    M = 6
+    nashExist = []
+    utilityMax = []
+    nash = []
+
+    iteration = 0
+    while len(nashExist) < 1:
+        iteration += 1
+        nashExist.append(True)
+        np.random.seed(550+iteration)
+        print(550+iteration)
+        vP, tP = getLocalizedPlacement(N, M)
+        dist = distance(vP, tP)  # initialize distance object
+        nA = nashAssigner(N=N, M=M, R=3, tau=1, dist=dist)  # initialize nash equilibrium algorithm
+        originalMain(N, M, vP, tP, nA)
+        algTarget = nA.targets
+        if nA.R != 3 or nA.iterations >= 26:
+            continue
+
+
+
+
+    print(nashExist)
+    print(utilityMax)
+    print(nash)
+
+    # maxUtilPercent = np.sum(utilityMax) / len(utilityMax)
+    # with open('doubleTesting5V3P20Trials2.csv', 'w') as out:
+    #     out.write('%f\n' %(maxUtilPercent))
+
+
+
+# iterativeTargets, permUtilities = otherMain(N, M, vP, tP)
+        # present = False
+        #
+        # for alloc in iterativeTargets:
+        #     differences = algTarget == alloc
+        #     if differences.all() == True:
+        #         nashExist.append(True)
+        #         break
+        # if len(permUtilities) != 0:
+        #     if np.amax(permUtilities) > np.mean(getTargetUtilities(nA)):
+        #         utilityMax.append(False)
+        #     else:
+        #         utilityMax.append(True)
+        #     nash.append(True)
+        # else:
+        #     nash.append(False)
+
+
+def printLargeVehicleRegimeTestingData():
+    with open('Data10/doubleTestRangeAveraged.csv','r') as inp:
+        lines = inp.read().splitlines()
+
+    Ns = []
+    nOfIterations = []
+    targetUtilities = []
+    platformReward = []
+    platformUperR = []
+    vUtility = []
+    maxUtility = []
+    minUtility = []
+
+    for line in lines:
+        tokens = line.split(',')
+        Ns.append(int(tokens[0]))
+        nOfIterations.append(int(tokens[1]))
+        targetUtilities.append(float(tokens[2]))
+        platformReward.append(float(tokens[3]))
+        platformUperR.append(float(tokens[4]))
+        maxUtility.append(float(tokens[5]))
+        minUtility.append(float(tokens[6]))
+        vUtility.append(float(tokens[7]))
+
+
     plt.figure()
-    plt.plot(vP[:, 0], vP[:, 1], 'ro')
-    plt.plot(tP[:, 0], tP[:, 1], 'bo')
+    plt.plot(Ns, platformUperR)
+    plt.axis([np.amin(Ns)-1, np.amax(Ns)+1, np.amin(platformUperR), np.amax(platformUperR)])
+    plt.xlabel('Number Of Vehicles')
+    plt.ylabel('Platform Utility per Reward')
+    plt.title('Platform Utility per Reward as N increases')
+
+    plt.figure()
+    plt.plot(Ns, platformReward)
+    plt.axis([np.amin(Ns)-1, np.amax(Ns)+1, np.amin(platformReward), np.amax(platformReward)])
+    plt.xlabel('Number of Vehicles')
+    plt.ylabel('Total Dollars Given')
+    plt.title('Platform Reward given out as N increases')
+
+    plt.figure()
+    plt.plot(Ns, targetUtilities)
+    plt.axis([np.amin(Ns)-1, np.amax(Ns)+1, np.amin(targetUtilities), np.amax(targetUtilities)])
+    plt.xlabel('Number Of Vehicles')
+    plt.ylabel('Platform Utility')
+    plt.title('Platform Utility as N increases')
+
+    plt.figure()
+    plt.plot(Ns, vUtility)
+    plt.axis([np.amin(Ns)-1, np.amax(Ns)+1, np.amin(vUtility), np.amax(vUtility)])
+    plt.xlabel("Number of Vehicles")
+    plt.ylabel("Average Vehicle Utility")
+    plt.title("Vehicle Utility as N increases")
+
+    plt.figure()
+    plt.plot(Ns, maxUtility)
+    plt.plot(Ns, minUtility)
+    plt.axis([np.amin(Ns)-1, np.amax(Ns)+1, np.amin(minUtility), np.amax(maxUtility)])
+    plt.xlabel('Number of Vehicles')
+    plt.ylabel('Target Utility')
+    plt.title('Max and Min Utility of targets as N increases')
     plt.show()
-    print(utility)
+
 
 
 def main():
-    # originalMain()
-    otherMain()
+    # averageTest()
+    #largeVehicleRegimeTesting()
+    printLargeVehicleRegimeTestingData()
 
 
 

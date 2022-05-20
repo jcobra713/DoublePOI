@@ -3,8 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.spatial.distance as spd 
 import scipy.stats as stats
+import pandas as pd
 
-np.random.seed(8)
+
 #define class for distance function 
 class distance: 
 	#class used for arrival time and distance calculations
@@ -273,10 +274,7 @@ def getLocalizedPlacement(N,M):
 		a = np.random.random((2,2))
 		vP[2*i:2*i+2,:] = (1/(1.2*(np.sum(a))))* a 
 		vP[2*i+1,:] = 1-vP[2*i+1,:]
-		
-		
-	
-	
+
 	r = np.random.random(M)-0.5 #random radii in [-0.5,0.5]
 	theta = np.pi/2 + (np.pi/6)*np.random.random(M) #random ange in [pi/2-pi/6, pi/2+pi/6] 
 	complexCrd = r*np.e**(1j*theta) 
@@ -284,16 +282,40 @@ def getLocalizedPlacement(N,M):
 	tP[:,0] = np.real(complexCrd)
 	tP[:,1] = np.imag(complexCrd)
 	tP = (0.5,0.5) + tP 
-	
-	
-	
+
 	return (vP,tP)
 
+
+def getAlternatingPlacement(N, M):
+	vP = np.zeros(shape=(2 * N, 2))
+	for i in range(N):
+		a = np.random.random((2, 2))
+		vP[2 * i:2 * i + 2, :] = (1 / (1.2 * (np.sum(a)))) * a
+		vP[2 * i + 1, :] = 1 - vP[2 * i + 1, :]
+
+		if (i % 2 == 0):
+			temp = np.copy(vP[2*i,:])
+			temp2 = np.copy(vP[2*i+1,:])
+			vP[2*i,:] = temp2
+			vP[2*i+1,:] = temp
+
+	r = np.random.random(M) - 0.5  # random radii in [-0.5,0.5]
+	theta = np.pi / 2 + (np.pi / 6) * np.random.random(M)  # random ange in [pi/2-pi/6, pi/2+pi/6]
+	complexCrd = r * np.e ** (1j * theta)
+	tP = np.zeros(shape=(M, 2))
+	tP[:, 0] = np.real(complexCrd)
+	tP[:, 1] = np.imag(complexCrd)
+	tP = (0.5, 0.5) + tP
+
+	return (vP, tP)
+
+
+
 def originalMain():
-	N = 5
-	M = 3
+	N = 30
+	M = 10
 	vP,tP = getRandomPlacement(N,M)
-	vP,tP = getLocalizedPlacement(N,M)
+	vP,tP = getAlternatingPlacement(N,M)
 	dist = distance(vP,tP)#initialize distance object  
 	
 	# R should be in the upper range of the diversion costs 
@@ -302,22 +324,53 @@ def originalMain():
 	nA.getAssignments()#get target assignments 
 	smartUtilities = np.array(getTargetUtilities(nA))
 	
-	print('running greedy  assignment')
-	nA.__init__(N=N,M=M,R=5,tau=1,dist=dist)
-	nA.greedyAssignments()
-	greedyUtilities =  np.array(getTargetUtilities(nA))
+	#print('running greedy  assignment')
+	#nA.__init__(N=N,M=M,R=5,tau=1,dist=dist)
+	#nA.greedyAssignments()
+	#greedyUtilities =  np.array(getTargetUtilities(nA))
 	
 	plt.figure()
-	plt.plot(vP[:,0], vP[:,1], 'ro')
-	plt.plot(tP[:,0], tP[:,1], 'bo')
+	plt.plot(vP[0::2,0], vP[0::2,1], 'bo')
+	plt.plot(vP[1::2, 0], vP[1::2, 1], 'go') # Destinations
+	plt.plot(tP[:,0], tP[:,1], 'ro')
 	
-	plt.figure()
-	plt.scatter(greedyUtilities,smartUtilities)
-	m = np.maximum(greedyUtilities.max(), smartUtilities.max())+1
-	plt.plot([0,m], [0,m], 'r')
-	plt.xlabel('utitlities with greedy assignment')
-	plt.ylabel('utilities with smart assignment')
+	#plt.figure()
+	#plt.scatter(greedyUtilities,smartUtilities)
+	#m = np.maximum(greedyUtilities.max(), smartUtilities.max())+1
+	#plt.plot([0,m], [0,m], 'r')
+	#plt.xlabel('utitlities with greedy assignment')
+	#plt.ylabel('utilities with smart assignment')
+	#plt.show()
+
+	print(nA.targets)
+
+
+	nA.targets = nA.targets.astype(int)
+	fig = plt.figure()
+	ax = plt.axes(projection='3d')
+	exportable = np.zeros((7,N*3))
+	scalar = 2
+	for i in range(0, N):
+		xline = [vP[2*i,0], vP[2*i,0], tP[nA.targets[i],0], tP[nA.targets[i],0], tP[nA.targets[i],0], vP[2*i+1,0],vP[2*i+1,0]]
+		yline = [vP[2*i, 1], vP[2*i, 1], tP[nA.targets[i], 1], tP[nA.targets[i], 1], tP[nA.targets[i], 1], vP[2*i+1, 1], vP[2*i+1, 1]]
+		zline = [0,scalar*i+3,scalar*i+3,0,scalar*i+3,scalar*i+3,0]
+		ax.plot3D(xline, yline, zline)
+
+		exportable[0::1,3*i] = np.transpose(xline)
+		exportable[0::1,3*i+1] = np.transpose(yline)
+		exportable[0::1,3*i+2] = np.transpose(zline)
+
+	pd.DataFrame(exportable).to_csv("droneArray2.csv")
+
+
+
+	ax.plot3D(tP[0::1,0], tP[0::1,1],0,'ro')
+	ax.plot3D(vP[0::2,0], vP[0::2,1],0,'bo')
+	ax.plot3D(vP[1::2,0], vP[1::2,1],0,'go')
+	plt.savefig('3dplot2.pdf')
 	plt.show()
+
+
 
 
 def largeTargetRegimeTesting():
@@ -348,8 +401,8 @@ def largeTargetRegimeTesting():
 	
 
 def largeVehicleRegimeTesting():
-	n = 20
-	nMax = 100
+	n = 2
+	nMax = 40
 	Ns = range(n, nMax+1)
 	M = 10
 	
@@ -392,6 +445,11 @@ def largeVehicleRegimeTesting():
 def printLargeVehicleRegimeTestingData():
 	with open('largeVehicleRegimeTesting_13.csv','r') as inp:
 		lines = inp.read().splitlines()
+
+	with open('2ndData', 'r') as inp:
+		linesDouble = inp.read().splitlines()
+
+	# Setup for Double
 	Ns = []
 	nOfIterations = []
 	targetUtilities = []
@@ -400,7 +458,7 @@ def printLargeVehicleRegimeTestingData():
 	vUtility = []
 	maxUtility = []
 	minUtility = []
-	for line in lines: 
+	for line in lines:
 		tokens = line.split(',')
 		Ns.append(int(tokens[0]))
 		nOfIterations.append(int(tokens[1]))
@@ -411,6 +469,25 @@ def printLargeVehicleRegimeTestingData():
 		minUtility.append(float(tokens[6]))
 		vUtility.append(float(tokens[7]))
 
+	# Setup for Single
+	Ns2 = []
+	nOfIterations2 = []
+	targetUtilities2 = []
+	platformReward2 = []
+	platformUperR2 = []
+	vUtility2 = []
+	maxUtility2 = []
+	minUtility2 = []
+	for line in linesDouble:
+		tokens = line.split(',')
+		Ns.append(int(tokens[0]))
+		nOfIterations.append(int(tokens[1]))
+		targetUtilities.append(float(tokens[2]))
+		platformReward.append(float(tokens[3]))
+		platformUperR.append(float(tokens[4]))
+		maxUtility.append(float(tokens[5]))
+		minUtility.append(float(tokens[6]))
+		vUtility.append(float(tokens[7]))
 
 	fig,axs = plt.subplots(2,1,sharex=True)
 	axs[0].set_ylim([0, 26])
