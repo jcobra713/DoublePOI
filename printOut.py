@@ -103,4 +103,4 @@ def printLargeVehicleRegimeTestingData():
 
 
 printLargeVehicleRegimeTestingData()
-print("Details: M=4 N=5-40 R=3")
+print("Details: M=4 N=5-40 R=3 Red=Single Blue = Double")
