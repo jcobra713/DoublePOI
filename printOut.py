@@ -103,3 +103,4 @@ def printLargeVehicleRegimeTestingData():
 
 
 printLargeVehicleRegimeTestingData()
+print("Details: M=4 N=5-40 R=3")
