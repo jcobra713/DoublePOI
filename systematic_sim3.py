@@ -221,6 +221,11 @@ class nashAssigner:
 			targetReward += float(self.getReward(si, t))
 		return targetReward
 
+	def getVehicleReward(self, n):
+		if self.targets[n] < 0: return 0
+		if self.targets[n] != self.targets[n]: return 0
+		return self.getReward(n, self.targets[n])
+
 def getTargetAssignments(nA): 		
 	print('final target allocation: (vehicle,target,utility)')
 	allocations = []
@@ -245,10 +250,16 @@ def getTargetUtilities(nA):
 	return targetUtilities
 	
 def getPlatformReward(nA):
-	targetRewards = []
-	for t in range(nA.M):
-		targetRewards.append(nA.getTargetReward(t))
+	targetRewards = 0
+	for n in range(nA.N):
+		targetRewards += (nA.getVehicleReward(n))
 	return targetRewards
+
+
+	#targetRewards = []
+	#for t in range(nA.M):
+	#		targetRewards.append(nA.getTargetReward(t))
+	#return targetRewards
 
 def getVUtility(nA):
 	vehicleU = [] # Utility per Reward
@@ -401,45 +412,108 @@ def largeTargetRegimeTesting():
 	
 
 def largeVehicleRegimeTesting():
-	n = 2
+	n = 5
+	nStart = n
 	nMax = 40
 	Ns = range(n, nMax+1)
-	M = 10
-	
-	nOfIterations = []
-	targetUtilities = []
-	platformReward = []
-	platformUtilperReward = []
-	averageVehicleUtility = []
-	maxUtility = []
-	minUtility = []
-	while n <= nMax:
-		print('running smart assignment, M=%d, N=%d'%(M,n))
-		vP,tP = getLocalizedPlacement(n,M)
-		dist = distance(vP,tP)#initialize distance object
-		nA = nashAssigner(N=n,M=M,R=5,tau=1,dist=dist) #initialize nash equilibrium algorithm
-		nA.getAssignments()#get target assignments
-		if (nA.iterations >= 25):
-			print("Repeated")
-			continue
-		elif np.sum(getPlatformReward(nA)) < 30:
-			print("Cycle Detected, Iteration Repeated")
-			continue
-		nOfIterations.append(nA.iterations)
-		targetUtilities.append(np.mean(getTargetUtilities(nA)))
-		platformReward.append(np.sum(getPlatformReward(nA)))
-		platformUtilperReward.append(np.mean(getTargetUtilities(nA))/np.sum(getPlatformReward(nA)))
-		averageVehicleUtility.append(np.mean(getVUtility(nA)))
-		maxUtility.append(np.amax(getTargetUtilities(nA)))
-		minUtility.append(np.amin(getTargetUtilities(nA)))
-		print(nA.iterations)
-		n += 1
+	M = 4
 
+	loop = 0
+	loopMax = 100
+
+	averages = {}
+	averages['nOfIterations'] = []
+	averages['targetUtilities'] = []
+	averages['platformReward'] = []
+	averages['platformUtilperReward'] = []
+	averages['averageVehicleUtility'] = []
+	averages['maxUtility'] = []
+	averages['minUtility'] = []
+
+
+
+	for it in range(loop, loopMax):
+		n = 5
+		nOfIterations = []
+		targetUtilities = []
+		platformReward = []
+		platformUtilperReward = []
+		averageVehicleUtility = []
+		maxUtility = []
+		minUtility = []
+
+		while n <= nMax:
+			print('running smart assignment, M=%d, N=%d'%(M,n))
+			vP,tP = getLocalizedPlacement(n,M)
+			dist = distance(vP,tP)#initialize distance object
+			nA = nashAssigner(N=n,M=M,R=3,tau=1,dist=dist) #initialize nash equilibrium algorithm
+			nA.getAssignments()#get target assignments
+			if (nA.iterations >= 25):
+				print("Repeated")
+				continue
+			elif np.sum(getPlatformReward(nA)) < 6:
+				print("Cycle Detected, Iteration Repeated")
+				continue
+			nOfIterations.append(nA.iterations)
+			targetUtilities.append(np.mean(getTargetUtilities(nA)))
+			platformReward.append(np.sum(getPlatformReward(nA)))
+			platformUtilperReward.append(np.mean(getTargetUtilities(nA))/np.sum(getPlatformReward(nA)))
+
+			hello = np.mean(getTargetUtilities(nA))/np.sum(getPlatformReward(nA))
+			if hello > 0.2:
+				print()
+
+			averageVehicleUtility.append(np.mean(getVUtility(nA)))
+			maxUtility.append(np.amax(getTargetUtilities(nA)))
+			minUtility.append(np.amin(getTargetUtilities(nA)))
+			print(nA.iterations)
+			n += 1
 	
-	with open('largeVehicleRegimeTesting_14.csv','w') as out:
-		for i,N in enumerate(Ns):
+		with open('SinglePOINew/largeTesting_'+str(it)+'.csv','w') as out:
+			for i,N in enumerate(Ns):
+				# print(i, " ", N)
+				out.write('%d,%d,%f,%f,%f,%f,%f,%f\n'%(N, nOfIterations[i], targetUtilities[i], platformReward[i], platformUtilperReward[i], maxUtility[i], minUtility[i], averageVehicleUtility[i]))
+
+		averages['nOfIterations'].append(nOfIterations)
+		averages['targetUtilities'].append(targetUtilities)
+		averages['platformReward'].append(platformReward)
+		averages['platformUtilperReward'].append(platformUtilperReward)
+		averages['averageVehicleUtility'].append(averageVehicleUtility)
+		averages['maxUtility'].append(maxUtility)
+		averages['minUtility'].append(minUtility)
+
+	itera = np.array(averages['nOfIterations'][0])
+	tUtil = np.array(averages['targetUtilities'][0])
+	formR = np.array(averages['platformReward'][0])
+	utilPerR = np.array(averages['platformUtilperReward'][0])
+	averageVUtil = np.array(averages['averageVehicleUtility'][0])
+	maxUtil = np.array(averages['maxUtility'][0])
+	minUtil = np.array(averages['minUtility'][0])
+
+	for i in range(1, loopMax):
+		itera += np.array(averages['nOfIterations'][i])
+		tUtil += np.array(averages['targetUtilities'][i])
+		formR += np.array(averages['platformReward'][i])
+		utilPerR += np.array(averages['platformUtilperReward'][i])
+		averageVUtil += np.array(averages['averageVehicleUtility'][i])
+		maxUtil += np.array(averages['maxUtility'][i])
+		minUtil += np.array(averages['minUtility'][i])
+
+	itera1 = itera / loopMax
+	tUtil1 = tUtil / loopMax
+	formR1 = formR / loopMax
+	utilPerR1 = utilPerR / loopMax
+	averageVUtil1 = averageVUtil / loopMax
+	maxUtil1 = maxUtil / loopMax
+	minUtil1 = minUtil / loopMax
+
+	with open('SinglePOINew/averagedSingleN5_20_R3.csv', 'w') as out:
+		for i, N in enumerate(Ns):
 			# print(i, " ", N)
-			out.write('%d,%d,%f,%f,%f,%f,%f,%f\n'%(N, nOfIterations[i], targetUtilities[i], platformReward[i], platformUtilperReward[i], maxUtility[i], minUtility[i], averageVehicleUtility[i]))
+			out.write('%d,%d,%f,%f,%f,%f,%f,%f\n' % (
+				N, itera1[i], tUtil1[i], formR1[i], utilPerR1[i], maxUtil1[i],
+				minUtil1[i], averageVUtil1[i]))
+
 
 
 def printLargeVehicleRegimeTestingData():
@@ -552,9 +626,10 @@ def exampleNonConvergence():
 	
 	
 def main():
-	# largeVehicleRegimeTesting()
+	largeVehicleRegimeTesting()
 	# printLargeVehicleRegimeTestingData()
-	originalMain()
+	# originalMain()
+    
 	
 	
 if __name__ == '__main__':

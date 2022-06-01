@@ -12,7 +12,7 @@ def averager():
     averages['maxUtility'] = []
     averages['minUtility'] = []
 
-    for i in range(0, 5):
+    for i in range(0, loopMax):
         with open('doubleTestRangeN3-14_M5_Sep29_' + str(i) + '.csv', 'r') as inp:
             lines = inp.read().splitlines()
 
@@ -60,13 +60,13 @@ def averager():
         maxUtil += np.array(averages['maxUtility'][i])
         minUtil += np.array(averages['minUtility'][i])
 
-    itera = itera / 2
-    tUtil = tUtil / 2
-    formR = formR / 2
-    utilPerR = utilPerR / 2
-    averageVUtil = averageVUtil / 2
-    maxUtil = maxUtil / 2
-    minUtil = minUtil / 2
+    itera = itera / loopMax
+    tUtil = tUtil / loopMax
+    formR = formR / loopMax
+    utilPerR = utilPerR / loopMax
+    averageVUtil = averageVUtil / loopMax
+    maxUtil = maxUtil / loopMax
+    minUtil = minUtil / loopMax
 
     with open('doubleTestRangeAveraged.csv', 'w') as out:
         for i, N in enumerate(Ns):
